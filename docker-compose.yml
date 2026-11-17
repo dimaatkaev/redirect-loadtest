@@ -1,0 +1,24 @@
+services:
+  redirect:
+    build: ./service
+    environment:
+      LINKS: "1000000"
+    ports:
+      - "8080:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512m
+
+  k6:
+    image: grafana/k6:latest
+    profiles: ["test"]
+    depends_on: [redirect]
+    environment:
+      RATE: "${RATE:-2000}"
+      DURATION: "${DURATION:-60s}"
+    volumes:
+      - ./k6:/scripts:ro
+      - ./results:/results
+    command: run --summary-export=/results/summary.json /scripts/redirect.js
